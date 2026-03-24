@@ -79,19 +79,20 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[-]` skipped
 
 ---
 
-## Phase 6 — Deployment Setup
+## Phase 6 — Deployment Setup ✓
 - [x] Create `docs/DEPLOY.md` — full 6-step deployment guide
 - [x] Create `docs/content-repo/trigger-deploy.yml` — GitHub Actions workflow for content repo
 - [x] Push app to GitHub — repo is `theadityachoudhury/brocoli` (not AINotesTakingApp)
-- [ ] Create Vercel project, link to `AINotesTakingApp` repo
-- [ ] Set all env vars in Vercel dashboard (see ARCHITECTURE.md)
-- [ ] Verify prebuild script runs correctly on Vercel
-- [ ] Set up custom domain in Vercel
-- [ ] Create `blog-content` private repo (or verify it exists)
-- [ ] Add first post to `blog-content/posts/` with proper frontmatter
-- [ ] Add `VERCEL_DEPLOY_HOOK_URL` to `blog-content` GitHub Secrets
-- [ ] Copy `docs/content-repo/trigger-deploy.yml` to `blog-content/.github/workflows/`
-- [ ] Test full pipeline: push `.md` → auto deploy → live
+- [x] Create Vercel project, link to `brocoli` repo
+- [x] Set all env vars in Vercel dashboard
+- [x] Verify prebuild script runs correctly on Vercel
+- [x] Set up custom domain in Vercel
+- [x] Create `blog-content` private repo
+- [x] Add first post to `blog-content/posts/` with proper frontmatter
+- [x] Add `VERCEL_DEPLOY_HOOK_URL` to `blog-content` GitHub Secrets
+- [x] Copy `docs/content-repo/trigger-deploy.yml` to `blog-content/.github/workflows/`
+- [x] Test full pipeline: push `.md` → auto deploy → live
+- [x] MANUAL: Supabase project created + SQL run + env vars set
 
 ---
 
@@ -150,5 +151,6 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[-]` skipped
 - Completed Phase 5 code (supabase.ts + usePageView real impl)
 - Supabase manual setup still pending (user needs to create project + run SQL + set env vars)
 - Created docs/DEPLOY.md (6-step deployment guide) + docs/content-repo/trigger-deploy.yml
-- **Stopped at:** Phase 6 — docs ready, git push not yet done
-- **Next step:** Phase 6 — git init + push app to GitHub, then follow docs/DEPLOY.md steps 2–6
+- Pushed app to GitHub (theadityachoudhury/brocoli), deployment working end-to-end
+- **Completed:** Phase 6 — full pipeline live
+- **Next step:** Phase 7 — Claude export tooling (scripts/add-frontmatter.ts + docs/EXPORT_WORKFLOW.md)
