@@ -75,7 +75,7 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[-]` skipped
 - [x] `src/lib/usePageView.ts` — real implementation: sessionStorage dedup, atomic RPC, fetch count, cleanup on unmount
 - [x] Wired into `Post.tsx` (was already calling the stub — now uses real impl)
 - [x] `vite.config.ts` — chunkSizeWarningLimit bumped to 600 (Post chunk is 148 kB gz, lazy-loaded, acceptable)
-- [ ] MANUAL: Create Supabase project + run SQL + set env vars (see instructions below)
+- [x] MANUAL: Supabase project created + SQL run + env vars set
 
 ---
 
@@ -96,16 +96,23 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[-]` skipped
 
 ---
 
-## Phase 7 — Local Admin App (blog-content/admin/)
+## Phase 7 — Local Admin App + Supabase Migration ✓
 - [x] `docs/content-repo/supabase-posts.sql` — posts table (slug PK, metadata, raw_url, view_count)
+- [x] `docs/content-repo/supabase-increment-view.sql` — updated increment_view RPC → writes posts.view_count
 - [x] `docs/content-repo/admin/` — full Vite + React admin app:
   - [x] GitHub Contents API lib (create / update / delete / read files)
   - [x] Supabase lib (service role key, bypasses RLS)
   - [x] TipTap editor with visual / raw / preview mode tabs
   - [x] Dashboard — paginated post list (10/page), draft badge, publish/unpublish/delete
   - [x] PostEditor — create + edit post, slug auto-derived, reading time computed on save
-- [ ] MANUAL: Run supabase-posts.sql in Supabase SQL editor
-- [ ] MANUAL: Copy docs/content-repo/admin/ to blog-content/admin/ and run setup (see docs/content-repo/SETUP.md)
+- [x] Blog frontend migrated to Supabase:
+  - [x] `src/lib/posts.ts` — getAllPosts() reads from Supabase (paginated, tag/search filter); static fallback in dev
+  - [x] `src/lib/posts.ts` — getAllTags() fetches all unique tags from Supabase
+  - [x] `src/pages/Home.tsx` — load more pagination, debounced search, server-side filter
+  - [x] `src/lib/usePageView.ts` — reads view_count from posts table
+  - [x] `scripts/fetch-content.ts` — uses Supabase for post list, raw_url for content
+- [x] MANUAL: supabase-posts.sql + supabase-increment-view.sql run in Supabase
+- [x] MANUAL: admin app copied to blog-content/admin/ and running locally
 
 ---
 
@@ -160,4 +167,5 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[-]` skipped
 - Created docs/DEPLOY.md (6-step deployment guide) + docs/content-repo/trigger-deploy.yml
 - Pushed app to GitHub (theadityachoudhury/brocoli), deployment working end-to-end
 - **Completed:** Phase 6 — full pipeline live
-- **Next step:** Phase 7 — copy docs/content-repo/ files to blog-content repo + run setup (see docs/content-repo/SETUP.md)
+- **Completed:** Phases 0–7 all done. App fully live with Supabase-backed content, local admin, and pagination.
+- **Next step:** Backlog items or Phase 8 (future features)
