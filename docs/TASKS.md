@@ -80,13 +80,17 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[-]` skipped
 ---
 
 ## Phase 6 — Deployment Setup
+- [x] Create `docs/DEPLOY.md` — full 6-step deployment guide
+- [x] Create `docs/content-repo/trigger-deploy.yml` — GitHub Actions workflow for content repo
+- [ ] Push `AINotesTakingApp` to GitHub (private repo `theadityachoudhury/AINotesTakingApp`)
 - [ ] Create Vercel project, link to `AINotesTakingApp` repo
 - [ ] Set all env vars in Vercel dashboard (see ARCHITECTURE.md)
 - [ ] Verify prebuild script runs correctly on Vercel
 - [ ] Set up custom domain in Vercel
-- [ ] Create `blog-content` private repo
+- [ ] Create `blog-content` private repo (or verify it exists)
+- [ ] Add first post to `blog-content/posts/` with proper frontmatter
 - [ ] Add `VERCEL_DEPLOY_HOOK_URL` to `blog-content` GitHub Secrets
-- [ ] Create `.github/workflows/trigger-deploy.yml` in `blog-content`
+- [ ] Copy `docs/content-repo/trigger-deploy.yml` to `blog-content/.github/workflows/`
 - [ ] Test full pipeline: push `.md` → auto deploy → live
 
 ---
@@ -145,5 +149,6 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[-]` skipped
 ### Session 6 — 2026-03-24
 - Completed Phase 5 code (supabase.ts + usePageView real impl)
 - Supabase manual setup still pending (user needs to create project + run SQL + set env vars)
-- **Stopped at:** Phase 6 — deployment not yet configured
-- **Next step:** Phase 6 — push to GitHub, create Vercel project, set env vars, set up blog-content repo + deploy hook, test pipeline
+- Created docs/DEPLOY.md (6-step deployment guide) + docs/content-repo/trigger-deploy.yml
+- **Stopped at:** Phase 6 — docs ready, git push not yet done
+- **Next step:** Phase 6 — git init + push app to GitHub, then follow docs/DEPLOY.md steps 2–6
