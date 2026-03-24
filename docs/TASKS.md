@@ -82,7 +82,7 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[-]` skipped
 ## Phase 6 — Deployment Setup
 - [x] Create `docs/DEPLOY.md` — full 6-step deployment guide
 - [x] Create `docs/content-repo/trigger-deploy.yml` — GitHub Actions workflow for content repo
-- [ ] Push `AINotesTakingApp` to GitHub (private repo `theadityachoudhury/AINotesTakingApp`)
+- [x] Push app to GitHub — repo is `theadityachoudhury/brocoli` (not AINotesTakingApp)
 - [ ] Create Vercel project, link to `AINotesTakingApp` repo
 - [ ] Set all env vars in Vercel dashboard (see ARCHITECTURE.md)
 - [ ] Verify prebuild script runs correctly on Vercel
