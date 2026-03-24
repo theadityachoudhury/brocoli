@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { createClient } from '@supabase/supabase-js';
 
 // Load .env then .env.local (mirrors Vite's behaviour; .env.local takes priority)
 dotenv.config({ path: '.env' });
@@ -8,10 +9,25 @@ dotenv.config({ path: '.env.local', override: true });
 
 const CONTENT_DIR = path.join(process.cwd(), 'public/content');
 
+interface PostRow {
+  slug: string;
+  title: string;
+  date: string;
+  description: string;
+  tags: string[];
+  reading_time: number;
+  draft: boolean;
+  raw_url: string;
+}
+
+function stripFrontmatter(content: string): string {
+  if (!content.startsWith('---')) return content;
+  const end = content.indexOf('\n---', 3);
+  return end === -1 ? content : content.slice(end + 4).trimStart();
+}
+
 async function run(): Promise<void> {
   const token = process.env.CONTENT_REPO_TOKEN;
-  const owner = process.env.CONTENT_REPO_OWNER;
-  const repo = process.env.CONTENT_REPO_NAME;
 
   // Dev mode: no token — reuse existing public/content/ files
   if (!token) {
@@ -20,62 +36,71 @@ async function run(): Promise<void> {
     return;
   }
 
-  if (!owner || !repo) {
-    throw new Error('CONTENT_REPO_OWNER and CONTENT_REPO_NAME must be set when CONTENT_REPO_TOKEN is provided.');
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be set.');
   }
 
-  const headers: Record<string, string> = {
-    Authorization: `token ${token}`,
-    Accept: 'application/vnd.github.v3+json',
-    'User-Agent': 'ai-notes-blog-prebuild',
-  };
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
-  // Fetch pre-generated index.json from dist/ (no parsing — already processed locally)
-  const indexApiRes = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/contents/index.json`,
-    { headers },
-  );
+  // Fetch all published posts from Supabase (metadata + raw_url)
+  const { data, error } = await supabase
+    .from('posts')
+    .select('slug, title, date, description, tags, reading_time, draft, raw_url')
+    .eq('draft', false)
+    .order('date', { ascending: false });
 
-  if (indexApiRes.status === 404) {
-    console.log(`[fetch-content] No index.json file found in ${owner}/${repo} — writing empty index.`);
+  if (error) throw new Error(`Supabase error: ${error.message}`);
+
+  const posts = (data ?? []) as PostRow[];
+
+  if (posts.length === 0) {
+    console.log('[fetch-content] No published posts in Supabase — writing empty index.');
     await fs.mkdir(CONTENT_DIR, { recursive: true });
     await fs.writeFile(path.join(CONTENT_DIR, 'index.json'), '[]', 'utf8');
     return;
   }
 
-  if (!indexApiRes.ok) {
-    const body = await indexApiRes.text();
-    throw new Error(`GitHub API error ${indexApiRes.status}: ${body}`);
-  }
-
-  const indexFileInfo = (await indexApiRes.json()) as { download_url: string };
-  const indexContent = await fetch(indexFileInfo.download_url, { headers }).then((r) => r.text());
-
-  // Fetch list of body-only .md files from dist/posts/
-  const postsApiRes = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/contents/posts`,
-    { headers },
-  );
-
-  const postFiles: Array<{ name: string; download_url: string }> = postsApiRes.ok
-    ? ((await postsApiRes.json()) as Array<{ name: string; download_url: string }>)
-    : [];
-
   // Recreate content dir cleanly
   await fs.rm(CONTENT_DIR, { recursive: true, force: true });
   await fs.mkdir(CONTENT_DIR, { recursive: true });
 
-  // Write index.json as-is (already correct shape)
-  await fs.writeFile(path.join(CONTENT_DIR, 'index.json'), indexContent, 'utf8');
+  const headers: Record<string, string> = {
+    Authorization: `token ${token}`,
+    'User-Agent': 'ai-notes-blog-prebuild',
+  };
 
-  // Download and write each post file
-  for (const file of postFiles.filter((f) => f.name.endsWith('.md'))) {
-    const content = await fetch(file.download_url, { headers }).then((r) => r.text());
-    await fs.writeFile(path.join(CONTENT_DIR, file.name), content, 'utf8');
+  // Fetch each post's body from its raw GitHub URL, strip frontmatter
+  for (const post of posts) {
+    const res = await fetch(post.raw_url, { headers });
+    if (!res.ok) {
+      console.warn(`[fetch-content] Skipping ${post.slug} — fetch failed (${res.status})`);
+      continue;
+    }
+    const body = stripFrontmatter(await res.text());
+    await fs.writeFile(path.join(CONTENT_DIR, `${post.slug}.md`), body, 'utf8');
   }
 
-  const postCount = JSON.parse(indexContent).length as number;
-  console.log(`[fetch-content] Fetched ${postCount} posts from ${owner}/${repo}`);
+  // Write index.json in PostMeta shape (camelCase to match existing types)
+  const index = posts.map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    date: p.date,
+    description: p.description,
+    tags: p.tags,
+    readingTime: p.reading_time,
+    draft: p.draft,
+  }));
+
+  await fs.writeFile(
+    path.join(CONTENT_DIR, 'index.json'),
+    JSON.stringify(index, null, 2),
+    'utf8',
+  );
+
+  console.log(`[fetch-content] Wrote ${posts.length} posts from Supabase`);
 }
 
 run().catch((err: unknown) => {

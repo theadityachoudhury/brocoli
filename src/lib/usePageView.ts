@@ -20,15 +20,15 @@ export function usePageView(slug: string): { count: number | null } {
           if (!error) sessionStorage.setItem(sessionKey, '1');
         }
 
-        // Fetch current count
+        // Fetch current count from posts table
         const { data } = await client
-          .from('page_views')
-          .select('count')
+          .from('posts')
+          .select('view_count')
           .eq('slug', slug)
           .single();
 
         if (mounted && data) {
-          setCount((data as { count: number }).count);
+          setCount((data as { view_count: number }).view_count);
         }
       } catch {
         // View count is non-critical — fail silently

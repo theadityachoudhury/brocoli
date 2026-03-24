@@ -1,53 +1,70 @@
-import { useState, useEffect, useMemo } from 'react';
-import { getAllPosts } from '@/lib/posts';
+import { useState, useEffect } from 'react';
+import { getAllPosts, getAllTags } from '@/lib/posts';
 import { PostList } from '@/components/Blog/PostList';
 import { Tag } from '@/components/ui/Tag';
 import type { PostMeta } from '@/types/post';
 
 export default function Home() {
   const [posts, setPosts] = useState<PostMeta[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
+  const [allTags, setAllTags] = useState<string[]>([]);
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
+  const hasMore = posts.length < total;
+
+  // Debounce search input 300 ms
   useEffect(() => {
-    getAllPosts()
-      .then(setPosts)
-      .finally(() => setLoading(false));
-  }, []);
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
-  const allTags = useMemo(
-    () => Array.from(new Set(posts.flatMap((p) => p.tags))).sort(),
-    [posts],
-  );
+  // Reset + reload when filter or search changes
+  useEffect(() => {
+    setLoading(true);
+    setPosts([]);
+    setPage(0);
+    void Promise.all([
+      getAllPosts({ page: 0, tag: activeTag, search: debouncedSearch }),
+      getAllTags(),
+    ]).then(([result, tags]) => {
+      setPosts(result.posts);
+      setTotal(result.total);
+      setAllTags(tags);
+      setLoading(false);
+    });
+  }, [activeTag, debouncedSearch]);
 
-  const filtered = useMemo(
-    () =>
-      posts
-        .filter((p) => !activeTag || p.tags.includes(activeTag))
-        .filter(
-          (p) =>
-            !search ||
-            p.title.toLowerCase().includes(search.toLowerCase()) ||
-            p.description.toLowerCase().includes(search.toLowerCase()),
-        ),
-    [posts, activeTag, search],
-  );
+  async function loadMore() {
+    const next = page + 1;
+    setLoadingMore(true);
+    const result = await getAllPosts({ page: next, tag: activeTag, search: debouncedSearch });
+    setPosts((prev) => [...prev, ...result.posts]);
+    setTotal(result.total);
+    setPage(next);
+    setLoadingMore(false);
+  }
 
   function handleTagClick(tag: string) {
     setActiveTag((prev) => (prev === tag ? null : tag));
   }
 
+  const countLabel = loading
+    ? '\u00A0'
+    : debouncedSearch || activeTag
+      ? `${total} result${total !== 1 ? 's' : ''}`
+      : `${total} post${total !== 1 ? 's' : ''}`;
+
   return (
     <div>
       {/* Heading */}
       <div className="mb-10">
-        <h1 className="text-text-primary text-3xl font-semibold tracking-tight mb-1">
-          Notes
-        </h1>
-        <p className="text-text-muted text-sm">
-          {loading ? '\u00A0' : `${posts.length} post${posts.length !== 1 ? 's' : ''}`}
-        </p>
+        <h1 className="text-text-primary text-3xl font-semibold tracking-tight mb-1">Notes</h1>
+        <p className="text-text-muted text-sm">{countLabel}</p>
       </div>
 
       {/* Search */}
@@ -80,7 +97,21 @@ export default function Home() {
       {loading ? (
         <PostListSkeleton />
       ) : (
-        <PostList posts={filtered} onTagClick={handleTagClick} />
+        <>
+          <PostList posts={posts} onTagClick={handleTagClick} />
+
+          {hasMore && (
+            <div className="flex justify-center mt-10">
+              <button
+                onClick={() => void loadMore()}
+                disabled={loadingMore}
+                className="px-5 py-2 text-sm border border-border rounded-lg text-text-secondary hover:border-accent-border hover:text-accent transition-colors disabled:opacity-50"
+              >
+                {loadingMore ? 'Loading…' : 'Load more'}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -115,10 +146,7 @@ function PostListSkeleton() {
           className="bg-surface border border-border rounded-lg p-6 animate-pulse"
         >
           <div className="h-3.5 bg-surface-raised rounded w-36 mb-4" />
-          <div
-            className="h-5 bg-surface-raised rounded mb-3"
-            style={{ width: `${titleWidth}%` }}
-          />
+          <div className="h-5 bg-surface-raised rounded mb-3" style={{ width: `${titleWidth}%` }} />
           <div className="h-3.5 bg-surface-raised rounded w-full mb-2" />
           <div className="h-3.5 bg-surface-raised rounded w-2/3 mb-4" />
           <div className="flex gap-2">
