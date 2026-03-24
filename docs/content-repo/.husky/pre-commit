@@ -1,0 +1,28 @@
+#!/bin/sh
+set -e
+
+# Only run when posts/*.md files are staged
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep '^posts/.*\.md$' || true)
+[ -z "$STAGED" ] && exit 0
+
+echo "[pre-commit] Validating frontmatter..."
+FAILED=0
+for f in $STAGED; do
+  for field in title date description tags; do
+    if ! grep -q "^${field}:" "$f"; then
+      echo "  ERROR: $f is missing frontmatter field '${field}'"
+      FAILED=1
+    fi
+  done
+done
+
+if [ "$FAILED" = "1" ]; then
+  echo ""
+  echo "Fix missing fields or run: npm run new-post"
+  exit 1
+fi
+
+echo "[pre-commit] Regenerating dist/..."
+npm run generate
+
+git add dist/

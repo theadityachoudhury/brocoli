@@ -96,9 +96,16 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[-]` skipped
 
 ---
 
-## Phase 7 — Claude Export Tooling
-- [ ] Write `scripts/add-frontmatter.ts` — CLI tool that takes a raw exported `.md` file and prompts for/adds frontmatter
-- [ ] Document Claude Code → blog post workflow in `docs/EXPORT_WORKFLOW.md`
+## Phase 7 — Local Admin App (blog-content/admin/)
+- [x] `docs/content-repo/supabase-posts.sql` — posts table (slug PK, metadata, raw_url, view_count)
+- [x] `docs/content-repo/admin/` — full Vite + React admin app:
+  - [x] GitHub Contents API lib (create / update / delete / read files)
+  - [x] Supabase lib (service role key, bypasses RLS)
+  - [x] TipTap editor with visual / raw / preview mode tabs
+  - [x] Dashboard — paginated post list (10/page), draft badge, publish/unpublish/delete
+  - [x] PostEditor — create + edit post, slug auto-derived, reading time computed on save
+- [ ] MANUAL: Run supabase-posts.sql in Supabase SQL editor
+- [ ] MANUAL: Copy docs/content-repo/admin/ to blog-content/admin/ and run setup (see docs/content-repo/SETUP.md)
 
 ---
 
@@ -153,4 +160,4 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[-]` skipped
 - Created docs/DEPLOY.md (6-step deployment guide) + docs/content-repo/trigger-deploy.yml
 - Pushed app to GitHub (theadityachoudhury/brocoli), deployment working end-to-end
 - **Completed:** Phase 6 — full pipeline live
-- **Next step:** Phase 7 — Claude export tooling (scripts/add-frontmatter.ts + docs/EXPORT_WORKFLOW.md)
+- **Next step:** Phase 7 — copy docs/content-repo/ files to blog-content repo + run setup (see docs/content-repo/SETUP.md)
