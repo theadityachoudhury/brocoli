@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(CI=true npm create vite@latest . -- --template react-ts)",
+      "Bash(npx create-vite@latest --help)",
+      "Bash(npx create-vite@latest . --template react-ts --no-interactive)",
+      "Bash(npx create-vite@latest _temp --template react-ts --no-interactive)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(node_modules/.bin/tailwindcss --version)",
+      "Bash(npm list:*)",
+      "Bash(npx tsc:*)",
+      "Bash(timeout 10 npx vite --port 5173)",
+      "Bash(npx vite:*)",
+      "Bash(npx tsx:*)"
+    ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true
+  }
+}
