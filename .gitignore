@@ -12,9 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Generated content (populated at build time by scripts/fetch-content.ts)
-public/content/
-
 # Local env files
 .env
 .env.local

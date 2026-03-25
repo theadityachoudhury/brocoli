@@ -8,13 +8,13 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prebuild": "tsx scripts/fetch-content.ts",
-    "predev": "tsx scripts/fetch-content.ts"
+    "migrate": "tsx scripts/migrate-content.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.100.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-helmet-async": "^3.0.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.13.2",
     "rehype-highlight": "^7.0.2",

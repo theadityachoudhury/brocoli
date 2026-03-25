@@ -109,6 +109,7 @@ export default function PostEditor() {
             tags,
             reading_time: readingTime,
             draft: asDraft,
+            content: body,
           })
           .eq('slug', form.slug);
         if (err) throw new Error(err.message);
@@ -132,6 +133,7 @@ export default function PostEditor() {
           draft: asDraft,
           raw_url: rawUrl(filename),
           view_count: 0,
+          content: body,
         });
         if (err) throw new Error(err.message);
       }

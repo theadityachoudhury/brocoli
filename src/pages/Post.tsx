@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { getPost } from '@/lib/posts';
 import { PostContent } from '@/components/Blog/PostContent';
 import { Tag } from '@/components/ui/Tag';
 import { ViewCount } from '@/components/ui/ViewCount';
+import { ReadingProgress } from '@/components/ui/ReadingProgress';
+import { RelatedPosts } from '@/components/Blog/RelatedPosts';
 import { usePageView } from '@/lib/usePageView';
 import { formatDate } from '@/lib/utils';
 import type { Post as PostType } from '@/types/post';
@@ -46,6 +49,20 @@ export default function Post() {
 
   return (
     <article>
+      <ReadingProgress />
+
+      <Helmet>
+        <title>{post.title} — Notes</title>
+        <meta name="description" content={post.description} />
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.description} />
+        <meta property="og:type" content="article" />
+        <meta property="article:published_time" content={post.date} />
+        {post.tags.map((tag) => (
+          <meta key={tag} property="article:tag" content={tag} />
+        ))}
+      </Helmet>
+
       {/* Back link */}
       <Link
         to="/"
@@ -83,6 +100,8 @@ export default function Post() {
 
       {/* Content */}
       <PostContent content={post.content} />
+
+      <RelatedPosts slug={post.slug} tags={post.tags} />
     </article>
   );
 }

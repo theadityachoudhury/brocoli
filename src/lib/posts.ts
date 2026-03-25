@@ -11,6 +11,7 @@ interface SupabasePostRow {
   tags: string[];
   reading_time: number;
   draft: boolean;
+  content?: string | null;
 }
 
 function mapRow(row: SupabasePostRow): PostMeta {
@@ -79,26 +80,46 @@ export async function getAllTags(): Promise<string[]> {
   return Array.from(new Set(all)).sort();
 }
 
-export async function getPost(slug: string): Promise<Post | null> {
-  let meta: PostMeta | null = null;
+export async function getRelatedPosts(
+  slug: string,
+  tags: string[],
+  limit = 3,
+): Promise<PostMeta[]> {
+  if (tags.length === 0) return [];
 
   if (!supabase) {
     const { posts } = await getAllPosts();
-    meta = posts.find((p) => p.slug === slug) ?? null;
-  } else {
-    const { data } = await supabase
-      .from('posts')
-      .select('slug, title, date, description, tags, reading_time, draft')
-      .eq('slug', slug)
-      .eq('draft', false)
-      .maybeSingle();
-    meta = data ? mapRow(data as SupabasePostRow) : null;
+    return posts
+      .filter((p) => p.slug !== slug && p.tags.some((t) => tags.includes(t)))
+      .slice(0, limit);
   }
 
-  if (!meta) return null;
+  const { data } = await supabase
+    .from('posts')
+    .select('slug, title, date, description, tags, reading_time, draft')
+    .eq('draft', false)
+    .neq('slug', slug)
+    .overlaps('tags', tags)
+    .order('date', { ascending: false })
+    .limit(limit);
 
-  const contentRes = await fetch(`/content/${slug}.md`);
-  if (!contentRes.ok) return null;
+  return ((data ?? []) as SupabasePostRow[]).map(mapRow);
+}
 
-  return { ...meta, content: await contentRes.text() };
+export async function getPost(slug: string): Promise<Post | null> {
+  if (!supabase) return null;
+
+  const { data } = await supabase
+    .from('posts')
+    .select('slug, title, date, description, tags, reading_time, draft, content')
+    .eq('slug', slug)
+    .eq('draft', false)
+    .maybeSingle();
+
+  if (!data) return null;
+
+  const row = data as SupabasePostRow;
+  if (!row.content) return null; // content not yet migrated
+
+  return { ...mapRow(row), content: row.content };
 }

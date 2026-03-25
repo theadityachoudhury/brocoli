@@ -117,14 +117,15 @@ Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[-]` skipped
 ---
 
 ## Backlog (future ideas)
+- [x] Migrate content to Supabase DB — `posts.content text` column; `npm run migrate` backfills existing posts; prebuild + `public/content/` removed
 - [ ] RSS feed (`/rss.xml`)
-- [ ] Open Graph meta tags per post (for social sharing)
+- [x] Open Graph meta tags per post — `react-helmet-async`; dynamic title + og tags (Google/browser; social bots not targeted — SPA limitation)
 - [ ] Search across all posts (client-side with Fuse.js)
-- [ ] Related posts by tags
-- [ ] Code block copy button
-- [ ] Dark mode toggle
-- [ ] Reading progress bar on post page
-- [ ] Syntax highlighting theme (via rehype-highlight or shiki)
+- [x] Related posts by tags — responsive grid below post content; Supabase `.overlaps()` query
+- [x] Code block copy button — hover reveals "Copy" button on all code blocks in `PostContent`
+- [x] Dark mode toggle — sun/moon button in header; persists to localStorage; FOUC-free via inline script in index.html
+- [x] Reading progress bar on post page — thin fixed accent bar at top of viewport
+- [x] Syntax highlighting theme — `.hljs` polished; `display: block; overflow-x: auto` added
 
 ---
 

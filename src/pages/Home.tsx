@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { getAllPosts, getAllTags } from '@/lib/posts';
 import { PostList } from '@/components/Blog/PostList';
 import { Tag } from '@/components/ui/Tag';
@@ -61,6 +62,11 @@ export default function Home() {
 
   return (
     <div>
+      <Helmet>
+        <title>Notes</title>
+        <meta name="description" content="Personal notes and articles." />
+      </Helmet>
+
       {/* Heading */}
       <div className="mb-10">
         <h1 className="text-text-primary text-3xl font-semibold tracking-tight mb-1">Notes</h1>
