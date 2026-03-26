@@ -2,8 +2,8 @@ import { Link } from 'react-router-dom';
 
 export default function NotFound() {
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center">
-      <p className="text-8xl font-bold text-border mb-6" aria-hidden="true">
+    <div className="flex flex-col items-center justify-center py-12 sm:py-24 text-center">
+      <p className="text-6xl sm:text-8xl font-bold text-border mb-6" aria-hidden="true">
         404
       </p>
       <h1 className="text-text-primary text-2xl font-semibold mb-2">

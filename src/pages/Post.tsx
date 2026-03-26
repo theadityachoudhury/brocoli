@@ -32,7 +32,7 @@ export default function Post() {
 
   if (!post) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
+      <div className="flex flex-col items-center justify-center py-12 sm:py-24 text-center">
         <p className="text-text-primary text-xl font-semibold mb-2">Post not found</p>
         <p className="text-text-muted text-sm mb-8">
           This post may have been moved or deleted.
@@ -66,14 +66,14 @@ export default function Post() {
       {/* Back link */}
       <Link
         to="/"
-        className="inline-flex items-center gap-1.5 text-text-muted text-sm hover:text-accent transition-colors duration-150 mb-10 group"
+        className="inline-flex items-center gap-1.5 text-text-muted text-sm hover:text-accent transition-colors duration-150 mb-6 sm:mb-10 group"
       >
         <ArrowLeftIcon />
         All notes
       </Link>
 
       {/* Title */}
-      <h1 className="text-text-primary text-3xl font-semibold tracking-tight leading-tight mb-4">
+      <h1 className="text-text-primary text-2xl sm:text-3xl font-semibold tracking-tight leading-tight mb-4">
         {post.title}
       </h1>
 
@@ -88,7 +88,7 @@ export default function Post() {
 
       {/* Tags */}
       {post.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-10">
+        <div className="flex flex-wrap gap-1.5 mb-6 sm:mb-10">
           {post.tags.map((tag) => (
             <Tag key={tag} label={tag} />
           ))}
@@ -96,7 +96,7 @@ export default function Post() {
       )}
 
       {/* Divider */}
-      <hr className="border-border mb-10" />
+      <hr className="border-border mb-6 sm:mb-10" />
 
       {/* Content */}
       <PostContent content={post.content} />
@@ -130,7 +130,7 @@ function PostSkeleton() {
     <div className="animate-pulse">
       <div className="h-4 bg-surface-raised rounded w-20 mb-10" />
       <div className="h-8 bg-surface-raised rounded w-3/4 mb-4" />
-      <div className="h-4 bg-surface-raised rounded w-56 mb-4" />
+      <div className="h-4 bg-surface-raised rounded w-48 sm:w-56 mb-4" />
       <div className="flex gap-2 mb-10">
         <div className="h-5 bg-surface-raised rounded w-14" />
         <div className="h-5 bg-surface-raised rounded w-16" />

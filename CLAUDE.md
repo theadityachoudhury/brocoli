@@ -4,12 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Personal blog/notes-taking app. Content is stored as `.md` files in a **separate private repo** (`blog-content`). Pushing content triggers a Vercel rebuild of this React app. Page views tracked via Supabase.
+Personal blog/notes-taking app. Content metadata and post body are stored in a **Supabase `posts` table** (single source of truth). New posts are added via a local admin app in the `blog-content` repo. Page views are tracked atomically via Supabase RPC.
 
 **Docs to read first:**
 - `docs/ARCHITECTURE.md` — full system design, diagrams, data models, env vars
 - `docs/TASKS.md` — phase-by-phase task tracker with session log; always check "Next step" at the bottom before starting work
-- `plans/blog-app-build-plan.md` — detailed step-by-step build plan with task checklists and verification commands per step
 
 ---
 
@@ -19,61 +18,99 @@ Personal blog/notes-taking app. Content is stored as `.md` files in a **separate
 
 ```bash
 npm run dev          # local dev server
-npm run build        # prebuild (fetch content) + vite build
+npm run build        # tsc type-check + vite build
 npm run preview      # preview production build locally
 npm run lint         # eslint
+npm run migrate      # one-time: backfill posts.content from GitHub raw URLs (requires SUPABASE_SERVICE_KEY)
 ```
 
-The `build` command runs a prebuild script first (`scripts/fetch-content.ts`) that fetches `.md` files from the content repo via GitHub API before Vite builds.
+No prebuild step — post metadata and content are fetched from Supabase at **runtime**, not build time.
 
 ---
 
-## Architecture Summary
+## Architecture
 
-- **Two private repos:** `AINotesTakingApp` (this repo, app code) + `blog-content` (MD files only)
-- **Deploy flow:** push to `blog-content` → GitHub Action fires Vercel deploy hook → Vercel fetches MD files + builds → deploys to CDN
-- **Content loading:** build-time only; `content/` dir is gitignored and populated by prebuild script
-- **Page views:** Supabase `page_views` table; upserted client-side on post load
+### Data flow
+
+- **Post list & metadata**: fetched from Supabase `posts` table at runtime by `src/lib/posts.ts`
+- **Post body**: stored in `posts.content` column (raw markdown, frontmatter stripped), fetched via `getPost(slug)`
+- **View counts**: `posts.view_count` column, incremented atomically via `increment_view` RPC in `usePageView` hook
+- **Dev fallback**: if `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` are absent, `getAllPosts()` falls back to `public/content/index.json` static files; `getPost()` returns null
+
+### Supabase `posts` table (primary source of truth)
+
+```sql
+-- Key columns: slug (PK), title, date, description, tags[], reading_time,
+--              draft, view_count, raw_url, content (markdown body)
+
+create or replace function increment_view(post_slug text)
+returns void as $$
+  insert into posts (slug, view_count) values (post_slug, 1)
+  on conflict (slug) do update set view_count = posts.view_count + 1;
+$$ language sql;
+```
+
+View dedup: `sessionStorage` key `viewed:{slug}` prevents re-counting on refresh.
+
+### Runtime data-fetch pattern
+
+`src/lib/posts.ts` is the sole data access layer. Every function checks `if (!supabase)` and provides a static-file fallback. `supabase` is `null` when env vars are missing — never throw, always gracefully degrade.
+
+### Routing
+
+`App.tsx` uses lazy-loaded routes: `/` → `Home`, `/posts/:slug` → `Post`, `*` → `NotFound`. A `vercel.json` catch-all rewrite handles SPA deep-links.
+
+---
 
 ## Design System
 
-See `docs/DESIGN.md` for the full reference. Key rules:
+See `docs/DESIGN.md` for the full token reference. Key rules:
 - **Never hardcode hex colors** — always use CSS custom properties (`var(--accent)`, etc.)
-- **Tailwind color utilities map to tokens:** `bg-surface`, `text-text-primary`, `text-accent`, `border-border`, `bg-accent-subtle`, etc.
+- **Tailwind utilities map to tokens:** `bg-surface`, `text-text-primary`, `text-accent`, `border-border`, `bg-accent-subtle`, `text-text-muted`, `surface-raised`, etc.
 - **Fonts:** Inter (UI), JetBrains Mono (code) — loaded in `index.html`
-- **Dark mode:** automatic via `prefers-color-scheme`; also responds to `.dark` class on `<html>`
+- **Dark mode:** `useDarkMode` hook (`src/lib/useDarkMode.ts`) toggles `.dark` class on `<html>`; auto via `prefers-color-scheme` also supported
 - All tokens defined in `src/index.css` under `:root` (light) and `@media (prefers-color-scheme: dark)` + `.dark` (dark)
+
+---
 
 ## Key Conventions
 
-- Post slugs are derived from filenames: `2025-03-24-my-post.md` → `/posts/my-post`
-- All posts require frontmatter: `title`, `date`, `description`, `tags`, `draft`
-- `draft: true` posts are excluded from builds
-- Reading time is computed from content at build time, not stored in frontmatter
+- Post slugs derived from filenames in content repo: `2025-03-24-my-post.md` → `my-post`
+- `draft: true` posts are excluded (filtered in Supabase query with `.eq('draft', false)`)
+- `readingTime` (camelCase in TypeScript) maps to `reading_time` (snake_case in Supabase)
+- Pagination: 10 posts/page (`PAGE_SIZE = 10` in `posts.ts`), load-more pattern on `Home`
+- SEO meta tags via `react-helmet-async` (`<Helmet>` in `Home` and `Post` pages)
+
+---
 
 ## Tech Stack
 
 | Layer | Choice |
 |---|---|
-| Frontend | Vite + React + TypeScript |
-| Styling | Tailwind CSS + @tailwindcss/typography |
-| MD rendering | react-markdown + remark-gfm |
-| Frontmatter | gray-matter |
-| Read time | reading-time |
-| Routing | React Router v6 |
-| Page views | Supabase (free tier) |
+| Frontend | Vite + React 19 + TypeScript |
+| Styling | Tailwind CSS v4 + @tailwindcss/typography |
+| MD rendering | react-markdown + remark-gfm + rehype-highlight |
+| Routing | React Router v7 |
+| Data / Page views | Supabase (posts table — metadata + content + view_count) |
+| SEO | react-helmet-async |
 | Hosting | Vercel |
+
+---
 
 ## Environment Variables
 
-See `docs/ARCHITECTURE.md` for full list. Required in Vercel:
-- `CONTENT_REPO_TOKEN` — GitHub PAT (contents:read on blog-content repo)
-- `CONTENT_REPO_OWNER`, `CONTENT_REPO_NAME`
-- `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+### App (Vercel + local dev)
+
+| Variable | Purpose |
+|---|---|
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon key (safe to expose, RLS protects data) |
+
+### Migration script only
+
+| Variable | Purpose |
+|---|---|
+| `CONTENT_REPO_TOKEN` | GitHub PAT with `contents:read` on `blog-content` |
+| `SUPABASE_SERVICE_KEY` | service_role key (Project Settings → API) — NOT anon key |
 
 Local dev: copy `.env.example` → `.env.local`
-
-## Current Status
-
-**Phases 1–5 complete.** Full app built. Supabase manual setup (project + SQL + env vars) still needed.
-**Next:** Phase 6 — deployment (Vercel + content repo + deploy hook). See `docs/TASKS.md`.

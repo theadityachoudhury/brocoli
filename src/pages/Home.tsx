@@ -68,8 +68,8 @@ export default function Home() {
       </Helmet>
 
       {/* Heading */}
-      <div className="mb-10">
-        <h1 className="text-text-primary text-3xl font-semibold tracking-tight mb-1">Notes</h1>
+      <div className="mb-6 sm:mb-10">
+        <h1 className="text-text-primary text-2xl sm:text-3xl font-semibold tracking-tight mb-1">Notes</h1>
         <p className="text-text-muted text-sm">{countLabel}</p>
       </div>
 
@@ -87,7 +87,7 @@ export default function Home() {
 
       {/* Tag filters */}
       {allTags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
           {allTags.map((tag) => (
             <Tag
               key={tag}
@@ -107,7 +107,7 @@ export default function Home() {
           <PostList posts={posts} onTagClick={handleTagClick} />
 
           {hasMore && (
-            <div className="flex justify-center mt-10">
+            <div className="flex justify-center mt-6 sm:mt-10">
               <button
                 onClick={() => void loadMore()}
                 disabled={loadingMore}

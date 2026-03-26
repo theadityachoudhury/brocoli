@@ -11,19 +11,19 @@ interface PostCardProps {
 export function PostCard({ post, onTagClick }: PostCardProps) {
   return (
     <article
-      className="group bg-surface border border-border rounded-lg p-6 transition-all duration-200 hover:border-accent-border"
+      className="group bg-surface border border-border rounded-lg p-4 sm:p-6 transition-all duration-200 hover:border-accent-border"
       style={{ boxShadow: 'var(--shadow-sm)' }}
     >
       {/* Meta row */}
       <div className="flex items-center gap-2 text-text-muted text-sm mb-3">
-        <time dateTime={post.date}>{formatDate(post.date)}</time>
+        <time dateTime={post.date} className="whitespace-nowrap">{formatDate(post.date)}</time>
         <span aria-hidden="true">·</span>
-        <span>{post.readingTime} min read</span>
+        <span className="whitespace-nowrap">{post.readingTime} min read</span>
       </div>
 
       {/* Title */}
       <Link to={`/posts/${post.slug}`}>
-        <h2 className="text-text-primary text-xl font-semibold leading-snug mb-2 group-hover:text-accent transition-colors duration-150">
+        <h2 className="text-text-primary text-lg sm:text-xl font-semibold leading-snug mb-2 group-hover:text-accent transition-colors duration-150">
           {post.title}
         </h2>
       </Link>

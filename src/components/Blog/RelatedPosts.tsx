@@ -22,9 +22,9 @@ export function RelatedPosts({ slug, tags }: RelatedPostsProps) {
   if (loading || posts.length === 0) return null;
 
   return (
-    <section className="mt-16 pt-10 border-t border-border">
+    <section className="mt-10 pt-6 sm:mt-16 sm:pt-10 border-t border-border">
       <h2 className="text-text-primary text-lg font-semibold mb-6">Related posts</h2>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className={`grid gap-4 ${posts.length === 1 ? 'grid-cols-1 max-w-sm' : posts.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
         {posts.map((post) => (
           <PostCard key={post.slug} post={post} />
         ))}
