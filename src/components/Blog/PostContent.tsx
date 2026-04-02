@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeSlug from 'rehype-slug';
 
 interface PostContentProps {
   content: string;
@@ -49,7 +50,7 @@ export function PostContent({ content }: PostContentProps) {
     <div className="prose prose-base sm:prose-lg max-w-none">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight]}
+        rehypePlugins={[rehypeHighlight, rehypeSlug]}
         components={{ pre: CopyableCodeBlock, table: ScrollableTable }}
       >
         {content}

@@ -239,6 +239,11 @@ code, pre, kbd {
   max-width: 72ch;
 }
 
+/* Offset sticky header (h-14 = 56px) when jumping to anchors */
+.prose :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: 5rem;
+}
+
 /* Code blocks */
 .prose pre {
   background-color: var(--surface-raised);

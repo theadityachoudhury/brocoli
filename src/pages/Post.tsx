@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { getPost } from '@/lib/posts';
+import { SITE_NAME, SITE_URL, AUTHOR_NAME } from '@/lib/siteConfig';
 import { PostContent } from '@/components/Blog/PostContent';
 import { Tag } from '@/components/ui/Tag';
 import { ViewCount } from '@/components/ui/ViewCount';
@@ -28,6 +28,10 @@ export default function Post() {
     });
   }, [slug]);
 
+  useEffect(() => {
+    document.title = post ? `${post.title} — ${SITE_NAME}` : SITE_NAME;
+  }, [post]);
+
   if (loading) return <PostSkeleton />;
 
   if (!post) {
@@ -47,62 +51,89 @@ export default function Post() {
     );
   }
 
+  const canonicalUrl = `${SITE_URL}/posts/${post.slug}`;
+
   return (
-    <article>
-      <ReadingProgress />
+    <>
+      {/* React 19 natively hoists these to <head> */}
+      <title>{post.title} — {SITE_NAME}</title>
+      <meta name="description" content={post.description} />
+      {post.tags.length > 0 && <meta name="keywords" content={post.tags.join(', ')} />}
+      <link rel="canonical" href={canonicalUrl} />
+      <meta property="og:type" content="article" />
+      <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:url" content={canonicalUrl} />
+      <meta property="og:title" content={post.title} />
+      <meta property="og:description" content={post.description} />
+      <meta property="article:published_time" content={post.date} />
+      {AUTHOR_NAME && <meta property="article:author" content={AUTHOR_NAME} />}
+      {post.tags.map((tag) => (
+        <meta key={tag} property="article:tag" content={tag} />
+      ))}
+      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:title" content={post.title} />
+      <meta name="twitter:description" content={post.description} />
+      {/* JSON-LD stays in body — Google reads it anywhere */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: post.title,
+            description: post.description,
+            datePublished: post.date,
+            url: canonicalUrl,
+            keywords: post.tags.join(', '),
+            ...(AUTHOR_NAME && { author: { '@type': 'Person', name: AUTHOR_NAME } }),
+          })
+        }}
+      />
 
-      <Helmet>
-        <title>{post.title} — Notes</title>
-        <meta name="description" content={post.description} />
-        <meta property="og:title" content={post.title} />
-        <meta property="og:description" content={post.description} />
-        <meta property="og:type" content="article" />
-        <meta property="article:published_time" content={post.date} />
-        {post.tags.map((tag) => (
-          <meta key={tag} property="article:tag" content={tag} />
-        ))}
-      </Helmet>
+      <article>
+        <ReadingProgress />
 
-      {/* Back link */}
-      <Link
-        to="/"
-        className="inline-flex items-center gap-1.5 text-text-muted text-sm hover:text-accent transition-colors duration-150 mb-6 sm:mb-10 group"
-      >
-        <ArrowLeftIcon />
-        All notes
-      </Link>
+        {/* Back link */}
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-text-muted text-sm hover:text-accent transition-colors duration-150 mb-6 sm:mb-10 group"
+        >
+          <ArrowLeftIcon />
+          All notes
+        </Link>
 
-      {/* Title */}
-      <h1 className="text-text-primary text-2xl sm:text-3xl font-semibold tracking-tight leading-tight mb-4">
-        {post.title}
-      </h1>
+        {/* Title */}
+        <h1 className="text-text-primary text-2xl sm:text-3xl font-semibold tracking-tight leading-tight mb-4">
+          {post.title}
+        </h1>
 
-      {/* Meta row */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-text-muted text-sm mb-4">
-        <time dateTime={post.date}>{formatDate(post.date)}</time>
-        <span aria-hidden="true">·</span>
-        <span>{post.readingTime} min read</span>
-        <span aria-hidden="true">·</span>
-        <ViewCount count={count} />
-      </div>
-
-      {/* Tags */}
-      {post.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-6 sm:mb-10">
-          {post.tags.map((tag) => (
-            <Tag key={tag} label={tag} />
-          ))}
+        {/* Meta row */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-text-muted text-sm mb-4">
+          <time dateTime={post.date}>{formatDate(post.date)}</time>
+          <span aria-hidden="true">·</span>
+          <span>{post.readingTime} min read</span>
+          <span aria-hidden="true">·</span>
+          <ViewCount count={count} />
         </div>
-      )}
 
-      {/* Divider */}
-      <hr className="border-border mb-6 sm:mb-10" />
+        {/* Tags */}
+        {post.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-6 sm:mb-10">
+            {post.tags.map((tag) => (
+              <Tag key={tag} label={tag} />
+            ))}
+          </div>
+        )}
 
-      {/* Content */}
-      <PostContent content={post.content} />
+        {/* Divider */}
+        <hr className="border-border mb-6 sm:mb-10" />
 
-      <RelatedPosts slug={post.slug} tags={post.tags} />
-    </article>
+        {/* Content */}
+        <PostContent content={post.content} />
+
+        <RelatedPosts slug={post.slug} tags={post.tags} />
+      </article>
+    </>
   );
 }
 

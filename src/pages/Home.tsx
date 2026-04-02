@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { getAllPosts, getAllTags } from '@/lib/posts';
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from '@/lib/siteConfig';
 import { PostList } from '@/components/Blog/PostList';
 import { Tag } from '@/components/ui/Tag';
 import type { PostMeta } from '@/types/post';
@@ -61,11 +61,21 @@ export default function Home() {
       : `${total} post${total !== 1 ? 's' : ''}`;
 
   return (
-    <div>
-      <Helmet>
-        <title>Notes</title>
-        <meta name="description" content="Personal notes and articles." />
-      </Helmet>
+    <>
+      {/* React 19 natively hoists these to <head> */}
+      <title>{SITE_NAME}</title>
+      <meta name="description" content={SITE_DESCRIPTION} />
+      <link rel="canonical" href={SITE_URL} />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:url" content={SITE_URL} />
+      <meta property="og:title" content={SITE_NAME} />
+      <meta property="og:description" content={SITE_DESCRIPTION} />
+      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:title" content={SITE_NAME} />
+      <meta name="twitter:description" content={SITE_DESCRIPTION} />
+
+      <div>
 
       {/* Heading */}
       <div className="mb-6 sm:mb-10">
@@ -119,7 +129,8 @@ export default function Home() {
           )}
         </>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
